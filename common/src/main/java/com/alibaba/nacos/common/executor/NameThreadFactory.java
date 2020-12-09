@@ -24,23 +24,39 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Name thread factory.
  *
+ * 实现自己的ThreadFactory，因为JDK默认的线程工厂的线程名称太统一了，
+ * 使用自己传入的名字可以很好的查看线程是干什么的
+ *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  */
 public class NameThreadFactory implements ThreadFactory {
-    
+
+    /**
+     * 线程名称自增
+     */
     private final AtomicInteger id = new AtomicInteger(0);
-    
+
+    /**
+     * 线程名称前缀，真正的线程名称加上原子自增的变量的值
+     */
     private String name;
-    
+
     public NameThreadFactory(String name) {
+        // 给线程名字前缀加个点
         if (!name.endsWith(StringUtils.DOT)) {
             name += StringUtils.DOT;
         }
         this.name = name;
     }
-    
+
+    /**
+     * 创建一个新的线程
+     * @param r
+     * @return
+     */
     @Override
     public Thread newThread(Runnable r) {
+        // 自定义线程名称
         String threadName = name + id.getAndDecrement();
         Thread thread = new Thread(r, threadName);
         thread.setDaemon(true);
