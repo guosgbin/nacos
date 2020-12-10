@@ -113,6 +113,9 @@ public final class ExecutorFactory {
         /**
          * Create a new single executor service with default thread factory and register to manager.
          *
+         * 创建一个拥有单个线程的线程池，并将其注册到 线程资源管理对象
+         * 默认的命名空间 nacos     JDK默认线程工厂
+         *
          * @param group group name
          * @return new single executor service
          */
@@ -124,6 +127,9 @@ public final class ExecutorFactory {
 
         /**
          * Create a new single executor service with input thread factory and register to manager.
+         *
+         * 创建一个拥有单个线程的线程池，并将其注册到 线程资源管理对象
+         * 默认的命名空间 nacos     指定线程工厂
          *
          * @param group         group name
          * @param threadFactory thread factory
@@ -138,6 +144,10 @@ public final class ExecutorFactory {
         /**
          * Create a new fixed executor service with default thread factory and register to manager.
          *
+         * 创建一个拥有指定线程数的线程池，并将其注册到 线程资源管理对象
+         * 默认的命名空间 nacos     JDK默认的线程工厂
+         *
+         *
          * @param group    group name
          * @param nThreads thread number
          * @return new fixed executor service
@@ -150,6 +160,9 @@ public final class ExecutorFactory {
 
         /**
          * Create a new fixed executor service with input thread factory and register to manager.
+         *
+         * 创建一个拥有指定线程数的线程池，并将其注册到 线程资源管理对象
+         * 默认的命名空间 nacos    指定线程工厂
          *
          * @param group         group name
          * @param nThreads      thread number
@@ -166,6 +179,10 @@ public final class ExecutorFactory {
         /**
          * Create a new single scheduled executor service with input thread factory and register to manager.
          *
+         * 创建一个拥有一个线程数的 周期性 线程池，并将其注册到 线程资源管理对象
+         * 默认的命名空间 nacos    指定线程工厂
+         *
+         *
          * @param group         group name
          * @param threadFactory thread factory
          * @return new single scheduled executor service
@@ -179,6 +196,9 @@ public final class ExecutorFactory {
 
         /**
          * Create a new scheduled executor service with input thread factory and register to manager.
+         *
+         * 创建一个拥有指定线程数的 周期性 线程池，并将其注册到 线程资源管理对象
+         * 默认的命名空间 nacos    指定线程工厂
          *
          * @param group         group name
          * @param nThreads      thread number
@@ -195,11 +215,13 @@ public final class ExecutorFactory {
         /**
          * Create a new custom executor service and register to manager.
          *
-         * @param group           group name
-         * @param coreThreads     core thread number
-         * @param maxThreads      max thread number
-         * @param keepAliveTimeMs keep alive time milliseconds
-         * @param threadFactory   thread facotry
+         * 创建一个自定义的线程工厂
+         *
+         * @param group           group name 组名
+         * @param coreThreads     core thread number 核心线程数
+         * @param maxThreads      max thread number 最大线程数
+         * @param keepAliveTimeMs keep alive time milliseconds 线程超时时间
+         * @param threadFactory   thread facotry 线程工厂
          * @return new custom executor service
          */
         public static ThreadPoolExecutor newCustomerThreadExecutor(final String group, final int coreThreads,
