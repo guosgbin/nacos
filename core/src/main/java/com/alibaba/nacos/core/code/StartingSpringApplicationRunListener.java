@@ -48,31 +48,32 @@ import java.util.concurrent.TimeUnit;
  * @since 0.5.0
  */
 public class StartingSpringApplicationRunListener implements SpringApplicationRunListener, Ordered {
-    
+
     private static final Logger LOGGER = LoggerFactory.getLogger(StartingSpringApplicationRunListener.class);
-    
+
     private static final String MODE_PROPERTY_KEY_STAND_MODE = "nacos.mode";
-    
+
     private static final String MODE_PROPERTY_KEY_FUNCTION_MODE = "nacos.function.mode";
-    
+
     private static final String LOCAL_IP_PROPERTY_KEY = "nacos.local.ip";
-    
+
     private ScheduledExecutorService scheduledExecutorService;
-    
+
     private volatile boolean starting;
-    
+
     public StartingSpringApplicationRunListener(SpringApplication application, String[] args) {
-    
+
     }
-    
+
     @Override
     public void starting() {
         starting = true;
     }
-    
+
     @Override
     public void environmentPrepared(ConfigurableEnvironment environment) {
         ApplicationUtils.injectEnvironment(environment);
+        // 如果单例模式=true，那么采用单机运行，否则是集群模式。
         if (ApplicationUtils.getStandaloneMode()) {
             System.setProperty(MODE_PROPERTY_KEY_STAND_MODE, "stand alone");
         } else {
@@ -85,38 +86,38 @@ public class StartingSpringApplicationRunListener implements SpringApplicationRu
         } else if (ApplicationUtils.FUNCTION_MODE_NAMING.equals(ApplicationUtils.getFunctionMode())) {
             System.setProperty(MODE_PROPERTY_KEY_FUNCTION_MODE, ApplicationUtils.FUNCTION_MODE_NAMING);
         }
-        
+
         System.setProperty(LOCAL_IP_PROPERTY_KEY, InetUtils.getSelfIP());
     }
-    
+
     @Override
     public void contextPrepared(ConfigurableApplicationContext context) {
         logClusterConf();
         logStarting();
     }
-    
+
     @Override
     public void contextLoaded(ConfigurableApplicationContext context) {
-    
+
     }
-    
+
     @Override
     public void started(ConfigurableApplicationContext context) {
         starting = false;
         ConfigurableEnvironment env = context.getEnvironment();
-        
+
         closeExecutor();
-        
+
         logFilePath();
-        
+
         // External data sources are used by default in cluster mode
         boolean useExternalStorage = ("mysql".equalsIgnoreCase(env.getProperty("spring.datasource.platform", "")));
-        
+
         // must initialize after setUseExternalDB
         // This value is true in stand-alone mode and false in cluster mode
         // If this value is set to true in cluster mode, nacos's distributed storage engine is turned on
         // default value is depend on ${nacos.standalone}
-        
+
         if (!useExternalStorage) {
             boolean embeddedStorage = ApplicationUtils.getStandaloneMode() || Boolean.getBoolean("embeddedStorage");
             // If the embedded data source storage is not turned on, it is automatically
@@ -125,37 +126,37 @@ public class StartingSpringApplicationRunListener implements SpringApplicationRu
                 useExternalStorage = true;
             }
         }
-        
+
         LOGGER.info("Nacos started successfully in {} mode. use {} storage",
                 System.getProperty(MODE_PROPERTY_KEY_STAND_MODE), useExternalStorage ? "external" : "embedded");
     }
-    
+
     @Override
     public void running(ConfigurableApplicationContext context) {
-    
+
     }
-    
+
     @Override
     public void failed(ConfigurableApplicationContext context, Throwable exception) {
         starting = false;
-        
+
         logFilePath();
-        
+
         LOGGER.error("Startup errors : {}", exception);
-        
+
         HttpClientManager.shutdown();
         ThreadPoolManager.shutdown();
         WatchFileCenter.shutdown();
         NotifyCenter.shutdown();
-        
+
         closeExecutor();
-        
+
         context.close();
-        
+
         LOGGER.error("Nacos failed to start, please see {} for more details.",
                 Paths.get(ApplicationUtils.getNacosHome(), "logs/nacos.log"));
     }
-    
+
     /**
      * Before {@link EventPublishingRunListener}.
      *
@@ -165,7 +166,7 @@ public class StartingSpringApplicationRunListener implements SpringApplicationRu
     public int getOrder() {
         return HIGHEST_PRECEDENCE;
     }
-    
+
     private void logClusterConf() {
         if (!ApplicationUtils.getStandaloneMode()) {
             try {
@@ -176,7 +177,7 @@ public class StartingSpringApplicationRunListener implements SpringApplicationRu
             }
         }
     }
-    
+
     private void logFilePath() {
         String[] dirNames = new String[] {"logs", "conf", "data"};
         for (String dirName : dirNames) {
@@ -188,19 +189,19 @@ public class StartingSpringApplicationRunListener implements SpringApplicationRu
             }
         }
     }
-    
+
     private void closeExecutor() {
         if (scheduledExecutorService != null) {
             scheduledExecutorService.shutdownNow();
         }
     }
-    
+
     private void logStarting() {
         if (!ApplicationUtils.getStandaloneMode()) {
-            
+
             scheduledExecutorService = ExecutorFactory
                     .newSingleScheduledExecutorService(new NameThreadFactory("com.alibaba.nacos.core.nacos-starting"));
-            
+
             scheduledExecutorService.scheduleWithFixedDelay(() -> {
                 if (starting) {
                     LOGGER.info("Nacos is starting...");

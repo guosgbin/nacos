@@ -27,25 +27,26 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 /**
  * Exception handler for console module.
+ * 全局处理异常
  *
  * @author nkorange
  * @since 1.2.0
  */
 @ControllerAdvice
 public class ConsoleExceptionHandler {
-    
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ConsoleExceptionHandler.class);
-    
+
     @ExceptionHandler(AccessException.class)
     private ResponseEntity<String> handleAccessException(AccessException e) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getErrMsg());
     }
-    
+
     @ExceptionHandler(IllegalArgumentException.class)
     private ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ExceptionUtil.getAllExceptionMsg(e));
     }
-    
+
     @ExceptionHandler(Exception.class)
     private ResponseEntity<String> handleException(Exception e) {
         LOGGER.error("CONSOLE", e);

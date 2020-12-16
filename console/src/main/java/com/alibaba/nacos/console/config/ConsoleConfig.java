@@ -39,12 +39,13 @@ import javax.annotation.PostConstruct;
 @EnableScheduling
 @PropertySource("/application.properties")
 public class ConsoleConfig {
-    
+
     @Autowired
     private ControllerMethodsCache methodsCache;
-    
+
     /**
      * Init.
+     * Spring启动时 初始化三个包下面的 所有映射和方法 到methodsCache里面存着
      */
     @PostConstruct
     public void init() {
@@ -52,7 +53,11 @@ public class ConsoleConfig {
         methodsCache.initClassMethod("com.alibaba.nacos.console.controller");
         methodsCache.initClassMethod("com.alibaba.nacos.config.server.controller");
     }
-    
+
+    /**
+     * 跨域处理
+     * @return
+     */
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
