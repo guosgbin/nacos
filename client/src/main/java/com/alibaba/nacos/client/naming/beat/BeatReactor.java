@@ -73,19 +73,25 @@ public class BeatReactor implements Closeable {
 
     /**
      * Add beat information.
+     * 添加心跳信息
+     * https://blog.csdn.net/yuanshangshenghuo/article/details/111299177
      *
-     * @param serviceName service name
-     * @param beatInfo    beat information
+     * @param serviceName service name 服务名
+     * @param beatInfo    beat information 心跳信息
      */
     public void addBeatInfo(String serviceName, BeatInfo beatInfo) {
         NAMING_LOGGER.info("[BEAT] adding beat: {} to beat map.", beatInfo);
+        // 根据信息构建key
         String key = buildKey(serviceName, beatInfo.getIp(), beatInfo.getPort());
         BeatInfo existBeat = null;
         //fix #1733
+        // 将之前的停用 这个map其实就是防止任务重复的
         if ((existBeat = dom2Beat.remove(key)) != null) {
             existBeat.setStopped(true);
         }
+        // 放到dom2Beat这个Map中
         dom2Beat.put(key, beatInfo);
+        // 任务调度 执行心跳任务 默认是5秒
         executorService.schedule(new BeatTask(beatInfo), beatInfo.getPeriod(), TimeUnit.MILLISECONDS);
         MetricsMonitor.getDom2BeatSizeMonitor().set(dom2Beat.size());
     }
@@ -145,7 +151,7 @@ public class BeatReactor implements Closeable {
         beatInfo.setWeight(instance.getWeight());
         beatInfo.setMetadata(instance.getMetadata());
         beatInfo.setScheduled(false);
-        beatInfo.setPeriod(instance.getInstanceHeartBeatInterval());
+        beatInfo.setPeriod(instance.getInstanceHeartBeatInterval()); // 设置心跳间隔
         return beatInfo;
     }
 

@@ -84,6 +84,12 @@ public class NacosNamingService implements NamingService {
         init(properties);
     }
 
+    /**
+     * 初始化
+     *
+     * @param properties
+     * @throws NacosException
+     */
     private void init(Properties properties) throws NacosException {
         ValidatorUtils.checkInitParam(properties);
         this.namespace = InitUtils.initNamespaceForNaming(properties);
@@ -95,6 +101,7 @@ public class NacosNamingService implements NamingService {
 
         this.eventDispatcher = new EventDispatcher();
         this.serverProxy = new NamingProxy(this.namespace, this.endpoint, this.serverList, properties);
+        // 发送心跳组件
         this.beatReactor = new BeatReactor(this.serverProxy, initClientBeatThreadCount(properties));
         this.hostReactor = new HostReactor(this.eventDispatcher, this.serverProxy, beatReactor, this.cacheDir,
                 isLoadCacheAtStart(properties), initPollingThreadCount(properties));
@@ -210,9 +217,11 @@ public class NacosNamingService implements NamingService {
         String groupedServiceName = NamingUtils.getGroupedName(serviceName, groupName);
         // 是否是临时节点，默认true
         if (instance.isEphemeral()) {
+            // 创建心跳信息，也就是续约信息
             BeatInfo beatInfo = beatReactor.buildBeatInfo(groupedServiceName, instance);
             beatReactor.addBeatInfo(groupedServiceName, beatInfo);
         }
+        // 进行注册
         serverProxy.registerService(groupedServiceName, groupName, instance);
     }
 

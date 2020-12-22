@@ -56,6 +56,7 @@ public class UtilAndComs {
 
     public static final String SERVER_ADDR_IP_SPLITER = ":";
 
+    /** 客户端发送心默认线程数 单核就是1，多核除以2 */
     public static final int DEFAULT_CLIENT_BEAT_THREAD_COUNT =
             Runtime.getRuntime().availableProcessors() > 1 ? Runtime.getRuntime().availableProcessors() / 2 : 1;
 
