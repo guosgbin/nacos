@@ -38,13 +38,15 @@ import java.util.function.Function;
 
 /**
  * web utils.
+ * web操作工具类
  *
  * @author nkorange
  */
 public class WebUtils {
-    
+
     /**
      * get target value from parameterMap, if not found will throw {@link IllegalArgumentException}.
+     * 通过参数名key，解析HttpServletRequest请求中的参数，并转码为UTF-8编码   是默认utf-8编码
      *
      * @param req {@link HttpServletRequest}
      * @param key key
@@ -58,9 +60,10 @@ public class WebUtils {
         String encoding = req.getParameter("encoding");
         return resolveValue(value, encoding);
     }
-    
+
     /**
      * get target value from parameterMap, if not found will return default value.
+     * 在required方法的基础上增加了默认值，如果获取不到，则返回默认值。
      *
      * @param req          {@link HttpServletRequest}
      * @param key          key
@@ -68,6 +71,8 @@ public class WebUtils {
      * @return value
      */
     public static String optional(final HttpServletRequest req, final String key, final String defaultValue) {
+        // 不包含指定key就返回默认值
+        // 包含这个key但是value为null 也返回默认值
         if (!req.getParameterMap().containsKey(key) || req.getParameterMap().get(key)[0] == null) {
             return defaultValue;
         }
@@ -78,9 +83,10 @@ public class WebUtils {
         String encoding = req.getParameter("encoding");
         return resolveValue(value, encoding);
     }
-    
+
     /**
      * decode target value.
+     * 使用UTF-8解码，再使用encoding编码， encoding默认UTF_8
      *
      * @param value    value
      * @param encoding encode
@@ -88,6 +94,7 @@ public class WebUtils {
      */
     private static String resolveValue(String value, String encoding) {
         if (StringUtils.isEmpty(encoding)) {
+            // 默认UTF-8
             encoding = StandardCharsets.UTF_8.name();
         }
         try {
@@ -96,7 +103,7 @@ public class WebUtils {
         }
         return value.trim();
     }
-    
+
     /**
      * decode target value with UrlDecode.
      *
@@ -116,7 +123,7 @@ public class WebUtils {
         }
         return value.trim();
     }
-    
+
     /**
      * get accept encode from request.
      *
@@ -128,9 +135,10 @@ public class WebUtils {
         encode = encode.contains(",") ? encode.substring(0, encode.indexOf(",")) : encode;
         return encode.contains(";") ? encode.substring(0, encode.indexOf(";")) : encode;
     }
-    
+
     /**
      * Returns the value of the request header "user-agent" as a <code>String</code>.
+     * 获取客户端的 user-agent  user-agent没有的话则返回Client-Version
      *
      * @param request HttpServletRequest
      * @return the value of the request header "user-agent", or the value of the request header "client-version" if the
@@ -144,9 +152,10 @@ public class WebUtils {
         }
         return userAgent;
     }
-    
+
     /**
      * response data to client.
+     * 返回响应
      *
      * @param response {@link HttpServletResponse}
      * @param body     body
@@ -159,9 +168,10 @@ public class WebUtils {
         response.getWriter().write(body);
         response.setStatus(code);
     }
-    
+
     /**
      * Handle file upload operations.
+     * 上传文件操作
      *
      * @param multipartFile file
      * @param consumer      post processor
@@ -169,15 +179,18 @@ public class WebUtils {
      */
     public static void onFileUpload(MultipartFile multipartFile, Consumer<File> consumer,
             DeferredResult<RestResult<String>> response) {
-        
+
         if (Objects.isNull(multipartFile) || multipartFile.isEmpty()) {
             response.setResult(RestResultUtils.failed("File is empty"));
             return;
         }
         File tmpFile = null;
         try {
+            // 创建临时文件
             tmpFile = DiskUtils.createTmpFile(multipartFile.getName(), ".tmp");
+            // 传输到临时文件
             multipartFile.transferTo(tmpFile);
+            // 消费
             consumer.accept(tmpFile);
         } catch (Throwable ex) {
             if (!response.isSetOrExpired()) {
@@ -187,7 +200,7 @@ public class WebUtils {
             DiskUtils.deleteQuietly(tmpFile);
         }
     }
-    
+
     /**
      * Register DeferredResult in the callback of CompletableFuture.
      *
@@ -198,9 +211,9 @@ public class WebUtils {
      */
     public static <T> void process(DeferredResult<T> deferredResult, CompletableFuture<T> future,
             Function<Throwable, T> errorHandler) {
-        
+
         deferredResult.onTimeout(future::join);
-        
+
         future.whenComplete((t, throwable) -> {
             if (Objects.nonNull(throwable)) {
                 deferredResult.setResult(errorHandler.apply(throwable));
@@ -209,7 +222,7 @@ public class WebUtils {
             deferredResult.setResult(t);
         });
     }
-    
+
     /**
      * Register DeferredResult in the callback of CompletableFuture.
      *
@@ -221,9 +234,9 @@ public class WebUtils {
      */
     public static <T> void process(DeferredResult<T> deferredResult, CompletableFuture<T> future, Runnable success,
             Function<Throwable, T> errorHandler) {
-        
+
         deferredResult.onTimeout(future::join);
-        
+
         future.whenComplete((t, throwable) -> {
             if (Objects.nonNull(throwable)) {
                 deferredResult.setResult(errorHandler.apply(throwable));

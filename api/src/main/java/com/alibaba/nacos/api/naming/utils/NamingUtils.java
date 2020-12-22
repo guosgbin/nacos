@@ -26,7 +26,7 @@ import com.alibaba.nacos.api.utils.StringUtils;
  * @since 1.0.0
  */
 public class NamingUtils {
-    
+
     public static String getGroupedName(final String serviceName, final String groupName) {
         if (StringUtils.isBlank(serviceName)) {
             throw new IllegalArgumentException("Param 'serviceName' is illegal, serviceName is blank");
@@ -34,7 +34,7 @@ public class NamingUtils {
         final String resultGroupedName = groupName + Constants.SERVICE_INFO_SPLITER + serviceName;
         return resultGroupedName.intern();
     }
-    
+
     public static String getServiceName(final String serviceNameWithGroup) {
         if (StringUtils.isBlank(serviceNameWithGroup)) {
             return StringUtils.EMPTY;
@@ -44,7 +44,7 @@ public class NamingUtils {
         }
         return serviceNameWithGroup.split(Constants.SERVICE_INFO_SPLITER)[1];
     }
-    
+
     public static String getGroupName(final String serviceNameWithGroup) {
         if (StringUtils.isBlank(serviceNameWithGroup)) {
             return StringUtils.EMPTY;
@@ -54,7 +54,7 @@ public class NamingUtils {
         }
         return serviceNameWithGroup.split(Constants.SERVICE_INFO_SPLITER)[0];
     }
-    
+
     /**
      * check combineServiceName format. the serviceName can't be blank. some relational logic in {@link
      * com.alibaba.nacos.naming.web.DistroFilter#doFilter}, it will handle combineServiceName in some case, you should
@@ -69,6 +69,7 @@ public class NamingUtils {
      * @param combineServiceName such as: groupName@@serviceName
      */
     public static void checkServiceNameFormat(String combineServiceName) {
+        // 通过 @@ 分割
         String[] split = combineServiceName.split(Constants.SERVICE_INFO_SPLITER);
         if (split.length <= 1) {
             throw new IllegalArgumentException(

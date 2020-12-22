@@ -17,6 +17,7 @@
 package com.alibaba.nacos.example;
 
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.naming.NamingFactory;
@@ -28,13 +29,19 @@ import com.alibaba.nacos.api.naming.NamingService;
  * @author xxc
  */
 public class App {
-    public static void main(String[] args) throws NacosException {
+    public static void main(String[] args) throws NacosException, InterruptedException {
         Properties properties = new Properties();
-        properties.setProperty("serverAddr", "21.34.53.5:8848,21.34.53.6:8848");
-        properties.setProperty("namespace", "quickStart");
+        // nacos服务地址
+        properties.setProperty("serverAddr", "127.0.0.1:8848");
+        // 命名空间
+//        properties.setProperty("namespace", "quickStart");
+
         NamingService naming = NamingFactory.createNamingService(properties);
+        // 注册实例
         naming.registerInstance("nacos.test.3", "11.11.11.11", 8888, "TEST1");
         naming.registerInstance("nacos.test.3", "2.2.2.2", 9999, "DEFAULT");
+        // 获取所有的实例
         System.out.println(naming.getAllInstances("nacos.test.3"));
+        TimeUnit.SECONDS.sleep(1000);
     }
 }

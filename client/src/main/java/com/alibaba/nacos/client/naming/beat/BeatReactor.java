@@ -45,19 +45,19 @@ import static com.alibaba.nacos.client.utils.LogUtils.NAMING_LOGGER;
  * @author harold
  */
 public class BeatReactor implements Closeable {
-    
+
     private final ScheduledExecutorService executorService;
-    
+
     private final NamingProxy serverProxy;
-    
+
     private boolean lightBeatEnabled = false;
-    
+
     public final Map<String, BeatInfo> dom2Beat = new ConcurrentHashMap<String, BeatInfo>();
-    
+
     public BeatReactor(NamingProxy serverProxy) {
         this(serverProxy, UtilAndComs.DEFAULT_CLIENT_BEAT_THREAD_COUNT);
     }
-    
+
     public BeatReactor(NamingProxy serverProxy, int threadCount) {
         this.serverProxy = serverProxy;
         this.executorService = new ScheduledThreadPoolExecutor(threadCount, new ThreadFactory() {
@@ -70,7 +70,7 @@ public class BeatReactor implements Closeable {
             }
         });
     }
-    
+
     /**
      * Add beat information.
      *
@@ -89,7 +89,7 @@ public class BeatReactor implements Closeable {
         executorService.schedule(new BeatTask(beatInfo), beatInfo.getPeriod(), TimeUnit.MILLISECONDS);
         MetricsMonitor.getDom2BeatSizeMonitor().set(dom2Beat.size());
     }
-    
+
     /**
      * Remove beat information.
      *
@@ -106,7 +106,7 @@ public class BeatReactor implements Closeable {
         beatInfo.setStopped(true);
         MetricsMonitor.getDom2BeatSizeMonitor().set(dom2Beat.size());
     }
-    
+
     /**
      * Build new beat information.
      *
@@ -116,9 +116,21 @@ public class BeatReactor implements Closeable {
     public BeatInfo buildBeatInfo(Instance instance) {
         return buildBeatInfo(instance.getServiceName(), instance);
     }
-    
+
     /**
      * Build new beat information.
+     * 这里出现了BeatInfo对象，这个BeatInfo对象是Nacos用于心跳任务的心跳信息，
+     * 首先要对实例进行判断是否是一个临时标签的实例对象，如果是的话需要为该Instance设置一个心跳任务信息，
+     * 用于Client主动上报自己的健康状态信息。那为什么只有临时的实例才需要设置心跳任务信息呢？
+     *
+     * 如果是临时实例，则不会在Nacos服务端持久化存储，需要通过上报心跳的方式进行保活，
+     * 如果一段时间内没有上报心跳，则会被Nacos服务端摘除。
+     * 在被摘除后如果又开始上报心跳，则会重新将这个实例注册。
+     * 持久化实例则会持久化到Nacos服务端，此时即使注册实例的客户端进程不在，
+     * 这个实例也不会从服务端删除，只会将健康状态设为不健康
+     *
+     * 因此由于临时的实例不会在Nacos服务中心进行持久化存储，
+     * 因此才需要一个心跳任务，将实例的信息放在心跳任务中不断的向Nacos服务中心上报。
      *
      * @param groupedServiceName service name with group name, format: ${groupName}@@${serviceName}
      * @param instance instance
@@ -136,11 +148,11 @@ public class BeatReactor implements Closeable {
         beatInfo.setPeriod(instance.getInstanceHeartBeatInterval());
         return beatInfo;
     }
-    
+
     public String buildKey(String serviceName, String ip, int port) {
         return serviceName + Constants.NAMING_INSTANCE_ID_SPLITTER + ip + Constants.NAMING_INSTANCE_ID_SPLITTER + port;
     }
-    
+
     @Override
     public void shutdown() throws NacosException {
         String className = this.getClass().getName();
@@ -148,15 +160,15 @@ public class BeatReactor implements Closeable {
         ThreadUtils.shutdownThreadPool(executorService, NAMING_LOGGER);
         NAMING_LOGGER.info("{} do shutdown stop", className);
     }
-    
+
     class BeatTask implements Runnable {
-        
+
         BeatInfo beatInfo;
-        
+
         public BeatTask(BeatInfo beatInfo) {
             this.beatInfo = beatInfo;
         }
-        
+
         @Override
         public void run() {
             if (beatInfo.isStopped()) {
@@ -197,7 +209,7 @@ public class BeatReactor implements Closeable {
             } catch (NacosException ex) {
                 NAMING_LOGGER.error("[CLIENT-BEAT] failed to send beat: {}, code: {}, msg: {}",
                         JacksonUtils.toJson(beatInfo), ex.getErrCode(), ex.getErrMsg());
-                
+
             }
             executorService.schedule(new BeatTask(beatInfo), nextTime, TimeUnit.MILLISECONDS);
         }
