@@ -166,10 +166,14 @@ public class Constants {
 
     public static final long DEFAULT_IP_DELETE_TIMEOUT = TimeUnit.SECONDS.toMillis(30);
 
-    /** 默认心跳间隔5秒 */
+    /**
+     * 默认心跳间隔5秒
+     */
     public static final long DEFAULT_HEART_BEAT_INTERVAL = TimeUnit.SECONDS.toMillis(5);
 
-    /** 默认命名空间 */
+    /**
+     * 默认命名空间
+     */
     public static final String DEFAULT_NAMESPACE_ID = "public";
 
     public static final boolean DEFAULT_USE_CLOUD_NAMESPACE_PARSING = true;

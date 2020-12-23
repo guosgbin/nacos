@@ -89,7 +89,7 @@ public class BeatReactor implements Closeable {
         if ((existBeat = dom2Beat.remove(key)) != null) {
             existBeat.setStopped(true);
         }
-        // 放到dom2Beat这个Map中
+        // 放到dom2Beat这个Map中Constants
         dom2Beat.put(key, beatInfo);
         // 任务调度 执行心跳任务 默认是5秒
         executorService.schedule(new BeatTask(beatInfo), beatInfo.getPeriod(), TimeUnit.MILLISECONDS);
